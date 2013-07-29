@@ -73,38 +73,38 @@
 
       # Hook up drag/drop mouse events
       @track
-        .mousedown (e) =>
+        .bind 'mousedown touchstart', (e) =>
           @trackEvent(e)
 
       if @settings.highlight
         @highlightTrack
-          .mousedown (e) =>
+          .bind 'mousedown touchstart', (e) =>
             @trackEvent(e)
 
       @dragger
-        .mousedown (e) =>
-          return unless e.which == 1
+        .bind 'mousedown touchstart', (e) =>
+          return unless e.type != 'mousedown' || e.which == 1
 
           # We've started moving
           @dragging = true
           @dragger.addClass "dragging"
 
           # Update the slider position
-          @domDrag(e.pageX, e.pageY)
+          @domDrag e
 
           false
 
       $("body")
-        .mousemove (e) =>
+        .bind 'mousemove touchmove', (e) =>
           if @dragging
             # Update the slider position
-            @domDrag(e.pageX, e.pageY)
+            @domDrag e
 
             # Always show a pointer when dragging
             $("body").css cursor: "pointer"
 
 
-        .mouseup (e) =>
+        .bind 'mouseup touchend', (e) =>
           if @dragging
             # Finished dragging
             @dragging = false
@@ -184,14 +184,22 @@
 
     # Respond to an event on a track
     trackEvent: (e) -> 
-      return unless e.which == 1
+      return unless e.type != 'mousedown' || e.which == 1
 
-      @domDrag(e.pageX, e.pageY, true)
+      @domDrag(e)
       @dragging = true
       false
 
     # Respond to a dom drag event
-    domDrag: (pageX, pageY, animate=false) ->
+    domDrag: (e, animate=false) ->
+      [pageX, pageY] =
+        if e.originalEvent && e.originalEvent.touches # jQuery users
+          [e.originalEvent.touches[0].pageX, e.originalEvent.touches[0].pageY]
+        else if e.touches # For Zepto users
+          [e.touches[0].pageX, e.touches[0].pageY]
+        else
+          [e.pageX, e.pageY]
+
       # Normalize position within allowed range
       pagePos = pageX - @slider.offset().left
       pagePos = Math.min(@slider.outerWidth(), pagePos)
