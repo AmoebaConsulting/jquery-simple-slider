@@ -149,7 +149,17 @@
           cursor: "pointer"
         .appendTo @slider
       return item
-    
+
+    confirmValue: (newValue) =>
+     # ask if value is OK, value is changed to max if not good
+      eventData =
+        current_value: @value
+        new_value: newValue
+        el: @slider
+
+      @input.trigger('slider:confirm-value', eventData)
+
+      return eventData.new_value
 
     # Set the ratio (value between 0 and 1) of the slider.
     # Exposed via el.slider("setRatio", ratio)
@@ -186,7 +196,7 @@
     trackEvent: (e) -> 
       return unless e.type != 'mousedown' || e.which == 1
 
-      @domDrag(e)
+      @domDrag(e)   # turning on animation screws up the confirmValue stuff
       @dragging = true
       false
 
@@ -216,16 +226,11 @@
         value = @ratioToValue(ratio)
 
         # ask if value is OK, value is changed to max if not good
-        eventData =
-          current_value: @value
-          new_value: value
-          el: @slider
-
-        @input.trigger('slider:confirm-value', eventData)
-        if eventData.new_value != value
+        newValue = this.confirmValue(value)
+        if newValue != value
           @hasExceededMaximumValue = true
           @track.addClass "out-of-bounds"
-          value = eventData.new_value
+          value = newValue
         else
           @track.removeClass "out-of-bounds"
 
