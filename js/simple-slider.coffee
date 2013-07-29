@@ -228,6 +228,8 @@
         # ask if value is OK, value is changed to max if not good
         newValue = this.confirmValue(value)
         if newValue != value
+          @pagePos = 0 # resetting this so two clicks on the same spot will have identical behavior
+
           @hasExceededMaximumValue = true
           @track.addClass "out-of-bounds"
           value = newValue
